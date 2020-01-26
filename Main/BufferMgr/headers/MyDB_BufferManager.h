@@ -4,9 +4,17 @@
 
 #include "MyDB_PageHandle.h"
 #include "MyDB_Table.h"
+#include "MyDB_Page.h"
+#include <unordered_map>
+#include <queue>
 
 using namespace std;
 
+struct hashFunc {
+    size_t operator()(const pair<string,long> &i) const {
+        return hash<string>()(k.first) ^ hash<long>()(k.second);
+    }
+};
 class MyDB_BufferManager {
 
 public:
@@ -47,12 +55,31 @@ public:
 	// and any temporary files need to be deleted
 	~MyDB_BufferManager ();
 
+
 	// FEEL FREE TO ADD ADDITIONAL PUBLIC METHODS 
 
 private:
+    // YOUR STUFF HERE
+    size_t pageSize;
+    size_t numPages;
+    string tempFile;
 
-	// YOUR STUFF HERE
+    ////all pages that has already been loaded to memory;
+    unordered_map<pair<string, long>, MyDB_Page*, hashFunc> loadedPages;
 
+    //The address of available buffer;
+    queue<void *> availBufferPool;
+
+    //LRU linked list
+    MyDB_Page* head;//head of list, most recently used
+    MyDB_Page* rear;//rear of list, least recently used
+
+    //get a available page
+    //1. check queue first. if available, return a page
+    //2. if non available buffer in queue, choose a least recently used unpinned page from LRU.
+    //3. write back dirty page.
+    MyDB_Page* getAvailablePage();
+    void updateLRU(MyDB_Page* newPage);
 };
 
 #endif

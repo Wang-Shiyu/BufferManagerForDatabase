@@ -20,4 +20,3 @@ string &MyDB_Table :: getStorageLoc () {
 }
 
 #endif
-
