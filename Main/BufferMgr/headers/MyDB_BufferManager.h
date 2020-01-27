@@ -17,6 +17,7 @@ class MyDB_BufferManager;
 class MyDB_Page;
 class MyDB_PageHandleBase;
 typedef shared_ptr <MyDB_PageHandleBase> MyDB_PageHandle;
+typedef shared_ptr <MyDB_BufferManager> MyDB_BufferManagerPtr;
 
 struct hashFunc {
     size_t operator()(const pair<string,long> &k) const {
@@ -53,7 +54,7 @@ public:
 	void unpin (MyDB_PageHandle unpinMe);
 
     //// page without reference
-    void releaseMemory(MyDB_Page* releasePage);
+    void releaseMemory(MyDB_PagePtr releasePage);
 
 	// creates an LRU buffer manager... params are as follows:
 	// 1) the size of each page is pageSize 
@@ -64,8 +65,8 @@ public:
 	// when the buffer manager is destroyed, all of the dirty pages need to be
 	// written back to disk, any necessary data needs to be written to the catalog,
 	// and any temporary files need to be deleted
-    void updateLRU (MyDB_Page* newPage);
-    void readFromDisk (MyDB_Page* newPage);
+    void updateLRU (MyDB_PagePtr newPage);
+    void readFromDisk (MyDB_PagePtr newPage);
 	~MyDB_BufferManager ();
 
 	// FEEL FREE TO ADD ADDITIONAL PUBLIC METHODS 
@@ -76,7 +77,7 @@ private:
     size_t numPages;
     string tempFile;
     //All pages being referred by handlers
-    unordered_map<pair<string, long>, MyDB_Page*, hashFunc> currentPages;
+    unordered_map<pair<string, long>, MyDB_PagePtr, hashFunc> currentPages;
 
     set<size_t> tempFilePos;
 
@@ -84,8 +85,8 @@ private:
     queue<void *> availBufferPool;
 
     //LRU linked list
-    MyDB_Page* head;//head of list, most recently used
-    MyDB_Page* rear;//rear of list, least recently used
+    MyDB_PagePtr head;//head of list, most recently used
+    MyDB_PagePtr rear;//rear of list, least recently used
 
     //get a available page
     //1. check queue first. if available, return a page

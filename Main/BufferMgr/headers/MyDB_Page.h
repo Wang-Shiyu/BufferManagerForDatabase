@@ -5,17 +5,17 @@
 #ifndef A1_MYDB_PAGE_H
 #define A1_MYDB_PAGE_H
 
-#include "MyDB_BufferManager.h"
 #include "MyDB_Table.h"
 
 
 using namespace std;
-
+class MyDB_Page;
+typedef shared_ptr <MyDB_Page> MyDB_PagePtr;
 class MyDB_Page{
 
 public:
-    MyDB_Page* next;
-    MyDB_Page* prev;
+    MyDB_PagePtr next;
+    MyDB_PagePtr prev;
     MyDB_Page(void* addr, MyDB_TablePtr whichTable, long offset);
     bool getIsDirty();
     void setIsDirty(bool isDirty);

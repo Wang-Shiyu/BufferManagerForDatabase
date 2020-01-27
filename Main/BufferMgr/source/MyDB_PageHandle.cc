@@ -22,9 +22,12 @@ void MyDB_PageHandleBase :: wroteBytes () {
 }
 
 //// page's reference counter increases
-MyDB_PageHandleBase::MyDB_PageHandleBase(MyDB_Page *page, MyDB_BufferManager *bufferManager) {
+MyDB_PageHandleBase::MyDB_PageHandleBase(MyDB_PagePtr page, MyDB_BufferManager* bufferManager) {
+    this->bufferManager = bufferManager;
+    this->mPage = page;
     mPage -> increRefCnt();
 }
+
 //// page's reference counter decreases
 MyDB_PageHandleBase :: ~MyDB_PageHandleBase () {
     mPage -> decreRefCnt();

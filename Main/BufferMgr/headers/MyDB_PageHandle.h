@@ -12,6 +12,8 @@ class MyDB_PageHandleBase;
 class MyDB_BufferManager;
 class MyDB_Page;
 typedef shared_ptr <MyDB_PageHandleBase> MyDB_PageHandle;
+typedef shared_ptr <MyDB_Page> MyDB_PagePtr;
+typedef shared_ptr <MyDB_BufferManager> MyDB_BufferManagerPtr;
 
 class MyDB_PageHandleBase {
 
@@ -23,7 +25,7 @@ public:
 	// in the buffer, then the contents of the page are loaded from 
 	// secondary storage.
 
-	MyDB_PageHandleBase(MyDB_Page* page, MyDB_BufferManager * bufferManager);
+	MyDB_PageHandleBase(MyDB_PagePtr page, MyDB_BufferManager* bufferManager);
 	void *getBytes ();
 
 	// let the page know that we have written to the bytes.  Must always
@@ -39,8 +41,8 @@ public:
 	// become unpinned.  
 	~MyDB_PageHandleBase ();
 
-    MyDB_BufferManager * bufferManager;
-    MyDB_Page * mPage;
+    MyDB_BufferManager* bufferManager;
+    MyDB_PagePtr mPage;
 	// FEEL FREE TO ADD ADDITIONAL PUBLIC METHODS
 
 private:

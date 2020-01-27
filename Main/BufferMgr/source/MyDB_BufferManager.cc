@@ -6,6 +6,7 @@
 #include <MyDB_Page.h>
 #include <MyDB_PageHandle.h>
 #include <stdlib.h>
+#include <iostream>
 #include <sys/types.h>
 #include <unistd.h>
 #include <fcntl.h>
@@ -13,7 +14,7 @@
 
 using namespace std;
 
-void MyDB_BufferManager :: updateLRU(MyDB_Page* newPage){
+void MyDB_BufferManager :: updateLRU(MyDB_PagePtr newPage){
     //remove
     if(newPage->next!= nullptr && newPage->prev != nullptr){//in LRU
         newPage->prev->next = newPage->next;
@@ -26,7 +27,7 @@ void MyDB_BufferManager :: updateLRU(MyDB_Page* newPage){
     newPage->prev = this->head;
 }
 
-void MyDB_BufferManager :: readFromDisk(MyDB_Page* newPage){
+void MyDB_BufferManager :: readFromDisk(MyDB_PagePtr newPage){
     //get available buffer and assign
     void* availableBuffer = getAvailableBuffer();
     newPage->setPageAddr(availableBuffer);
@@ -40,13 +41,16 @@ void MyDB_BufferManager :: readFromDisk(MyDB_Page* newPage){
 
 MyDB_PageHandle MyDB_BufferManager :: getPage (MyDB_TablePtr whichTable, long pageNum) {
     //check whether the page has already been in buffer.
-    auto it = this->currentPages.find(make_pair(whichTable->getName(),pageNum));
+
+    pair<string, long>thisPage = make_pair(whichTable->getName(),pageNum);
+    auto it = this->currentPages.find(thisPage);
 
     MyDB_PageHandle new_handle;
     //not found, allocate a page
     if(it == this->currentPages.end()){
-        new_handle = make_shared<MyDB_PageHandleBase>(new MyDB_Page(nullptr,whichTable, pageNum),this) ;
-        currentPages[make_pair(whichTable->getName(),pageNum)] = new_handle->mPage;
+        MyDB_PagePtr new_page = make_shared <MyDB_Page>(nullptr,whichTable,pageNum);
+        new_handle = make_shared<MyDB_PageHandleBase>(new_page, this) ;
+        currentPages[thisPage] = new_page;
     }else{//found, create a corresponding handle
         new_handle = make_shared<MyDB_PageHandleBase>(it->second,this);
     }
@@ -59,7 +63,10 @@ MyDB_PageHandle MyDB_BufferManager :: getPage () {
     if(this->tempFilePos.empty()){
         this->tempFilePos.insert(filePos+1);
     }
-    MyDB_PageHandle new_handler = make_shared<MyDB_PageHandleBase>(new MyDB_Page(nullptr,nullptr,filePos),this);
+
+    MyDB_PagePtr new_page = make_shared <MyDB_Page>(nullptr,nullptr,filePos);
+    MyDB_PageHandle new_handler = make_shared<MyDB_PageHandleBase>(new_page,this);
+
     this->currentPages[make_pair(nullptr,filePos)] = new_handler->mPage;
     new_handler->mPage->setIsInBuffer(true);
     new_handler->mPage->setIsAnonymous(true);
@@ -69,12 +76,13 @@ MyDB_PageHandle MyDB_BufferManager :: getPage () {
 void * MyDB_BufferManager :: getAvailableBuffer () {
     // Check queue first. if available, return a page
     if ( ! this -> availBufferPool.empty() ) {
+        cout<<"fetch buffer from buffer pool\n";
         void * availAddr = this -> availBufferPool.front();
         availBufferPool.pop();
         return availAddr;
     } else {
         // If non available buffer in queue, choose a least recently used unpinned page from LRU.
-        MyDB_Page * curr = this -> rear -> prev;
+        MyDB_PagePtr curr = this -> rear -> prev;
         while (curr && curr->getIsPinned()) {
             curr = curr -> prev;
         }
@@ -98,8 +106,8 @@ void * MyDB_BufferManager :: getAvailableBuffer () {
             }
             curr -> setIsDirty(false);
         }
-        MyDB_Page * prev = curr -> prev;  //  3
-        MyDB_Page * next = curr -> next; // 1p
+        MyDB_PagePtr prev = curr -> prev;  //  3
+        MyDB_PagePtr next = curr -> next; // 1p
         prev -> next = next; // 3->1 3<-2<->1p
         next -> prev = prev; // 3<->1 3<-2->1p
         curr -> next = nullptr;
@@ -112,14 +120,20 @@ void * MyDB_BufferManager :: getAvailableBuffer () {
 
 MyDB_PageHandle MyDB_BufferManager :: getPinnedPage (MyDB_TablePtr whichTable, long pageNum) {
 
-    auto it = this->currentPages.find(make_pair(whichTable->getName(), pageNum));
+    pair<string, long>thisPage = make_pair(whichTable->getName(),pageNum);
+    auto it = this->currentPages.find(thisPage);
     MyDB_PageHandle new_handle;
 
     //not found in currentPages
+
     if(it == this->currentPages.end()){
         void* availableBuffer = getAvailableBuffer();
-        new_handle = make_shared<MyDB_PageHandleBase>(new MyDB_Page(availableBuffer,whichTable,pageNum), this);
-        currentPages[make_pair(whichTable->getName(),pageNum)] = new_handle->mPage;
+        cout<<"fetch success\n";
+        MyDB_PagePtr new_page = make_shared <MyDB_Page>(availableBuffer,whichTable,pageNum);
+        cout<<"page success\n";
+        new_handle = make_shared<MyDB_PageHandleBase>(new_page,this) ;
+        currentPages[thisPage] = new_page;
+        cout<<"not found but create pinned page\n";
     }else{//found in currentPages
         if(it->second->getIsInBuffer()){//Already in Buffer
             new_handle = make_shared<MyDB_PageHandleBase>(it->second, this);
@@ -156,10 +170,10 @@ MyDB_BufferManager :: MyDB_BufferManager (size_t pageSize, size_t numPages, stri
     this->tempFile = tempFile;
 
     //Initialize linked list.
-    this->head = new MyDB_Page(nullptr, nullptr,0);//dummy node
+    this->head = make_shared<MyDB_Page>(nullptr, nullptr,0);//dummy node
     this->head->next = this->rear;
     this->head->prev = nullptr;
-    this->rear = new MyDB_Page(nullptr, nullptr,0);//dummy node
+    this->rear = make_shared<MyDB_Page>(nullptr, nullptr,0);//dummy node
     this->rear->prev = this->head;
     this->rear->next = nullptr;
 
@@ -177,7 +191,7 @@ MyDB_BufferManager :: MyDB_BufferManager (size_t pageSize, size_t numPages, stri
 }
 
 
-void MyDB_BufferManager::releaseMemory(MyDB_Page *releasePage) {
+void MyDB_BufferManager::releaseMemory(MyDB_PagePtr releasePage) {
     // find releasePage
     auto tmpPair = make_pair(releasePage->getWhichTable()->getName(), releasePage->getOffset());
     auto it = currentPages.find(tmpPair);
@@ -227,7 +241,7 @@ void MyDB_BufferManager::releaseMemory(MyDB_Page *releasePage) {
             if (curr && (curr->next || curr->prev) ) {
                 curr->next->prev = curr->prev;
                 curr->prev->next = curr->next;
-                delete curr;
+                curr.reset();
             }
 
             // release memory
@@ -240,12 +254,12 @@ void MyDB_BufferManager::releaseMemory(MyDB_Page *releasePage) {
 }
 
 MyDB_BufferManager :: ~MyDB_BufferManager () {
-    MyDB_Page* cur = head;
+    MyDB_PagePtr cur = head;
     while(cur!= nullptr){
         free(cur->getPageAddr());
-        MyDB_Page* temp = cur;
+        MyDB_PagePtr temp = cur;
         cur = cur->next;
-        delete temp;
+        temp.reset();
     }
     while(!availBufferPool.empty()){
         free(availBufferPool.front());
