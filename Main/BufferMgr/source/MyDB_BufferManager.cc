@@ -19,11 +19,17 @@ void MyDB_BufferManager :: updateLRU(MyDB_PagePtr newPage){
     if(newPage->next!= nullptr && newPage->prev != nullptr){//in LRU
         newPage->prev->next = newPage->next;
         newPage->next->prev = newPage->prev;
+        cout<<"remove\n";
     }
     //insert to head;
+    cout<<"insert to head\n";
     newPage->next = this->head->next;
+    cout<<"1\n";
     this->head->next = newPage;
+    cout<<"2\n";
+    cout<<newPage->next<<endl;
     newPage->next->prev = newPage;
+    cout<<"3\n";
     newPage->prev = this->head;
 }
 
@@ -146,7 +152,9 @@ MyDB_PageHandle MyDB_BufferManager :: getPinnedPage (MyDB_TablePtr whichTable, l
     //set attribute;
     new_handle->mPage->setIsInBuffer(true);
     new_handle->mPage->setIsPinned(true);
+    cout<<"begin update\n";
     updateLRU(new_handle->mPage);
+    cout<<"finish update\n";
 	return nullptr;
 }
 
@@ -171,9 +179,9 @@ MyDB_BufferManager :: MyDB_BufferManager (size_t pageSize, size_t numPages, stri
 
     //Initialize linked list.
     this->head = make_shared<MyDB_Page>(nullptr, nullptr,0);//dummy node
+    this->rear = make_shared<MyDB_Page>(nullptr, nullptr,0);//dummy node
     this->head->next = this->rear;
     this->head->prev = nullptr;
-    this->rear = make_shared<MyDB_Page>(nullptr, nullptr,0);//dummy node
     this->rear->prev = this->head;
     this->rear->next = nullptr;
 
