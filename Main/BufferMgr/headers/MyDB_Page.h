@@ -11,7 +11,6 @@
 
 using namespace std;
 
-
 class MyDB_Page{
 
 public:
@@ -40,7 +39,6 @@ public:
 private:
     void* PageAddr;
     MyDB_TablePtr whichTable;
-    MyDB_BufferManager mng;
     long offset;
     int refCnt;
     bool isInBuffer;

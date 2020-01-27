@@ -11,6 +11,13 @@
 
 using namespace std;
 
+
+
+class MyDB_BufferManager;
+class MyDB_Page;
+class MyDB_PageHandleBase;
+typedef shared_ptr <MyDB_PageHandleBase> MyDB_PageHandle;
+
 struct hashFunc {
     size_t operator()(const pair<string,long> &k) const {
         return hash<string>()(k.first) ^ hash<long>()(k.second);
@@ -46,7 +53,7 @@ public:
 	void unpin (MyDB_PageHandle unpinMe);
 
     //// page without reference
-    void releaseMemory(MyDB_Page* releasePage, MyDB_PageHandle currHandle);
+    void releaseMemory(MyDB_Page* releasePage);
 
 	// creates an LRU buffer manager... params are as follows:
 	// 1) the size of each page is pageSize 
@@ -57,8 +64,8 @@ public:
 	// when the buffer manager is destroyed, all of the dirty pages need to be
 	// written back to disk, any necessary data needs to be written to the catalog,
 	// and any temporary files need to be deleted
-    void updateLRU(MyDB_Page* newPage);
-    void readFromDisk(MyDB_Page* newPage);
+    void updateLRU (MyDB_Page* newPage);
+    void readFromDisk (MyDB_Page* newPage);
 	~MyDB_BufferManager ();
 
 	// FEEL FREE TO ADD ADDITIONAL PUBLIC METHODS 

@@ -48,7 +48,7 @@ MyDB_PageHandle MyDB_BufferManager :: getPage (MyDB_TablePtr whichTable, long pa
         new_handle = make_shared<MyDB_PageHandleBase>(new MyDB_Page(nullptr,whichTable, pageNum),this) ;
         currentPages[make_pair(whichTable->getName(),pageNum)] = new_handle->mPage;
     }else{//found, create a corresponding handle
-        new_handle = make_shared<MyDB_PageHandleBase>(it->second,this, whichTable, pageNum);
+        new_handle = make_shared<MyDB_PageHandleBase>(it->second,this);
     }
     return new_handle;
 }
@@ -122,9 +122,9 @@ MyDB_PageHandle MyDB_BufferManager :: getPinnedPage (MyDB_TablePtr whichTable, l
         currentPages[make_pair(whichTable->getName(),pageNum)] = new_handle->mPage;
     }else{//found in currentPages
         if(it->second->getIsInBuffer()){//Already in Buffer
-            new_handle = make_shared<MyDB_PageHandleBase>(it->second, this, whichTable, pageNum);
+            new_handle = make_shared<MyDB_PageHandleBase>(it->second, this);
         }else{//In disk
-            new_handle = make_shared<MyDB_PageHandleBase>(it->second, this, whichTable, pageNum);
+            new_handle = make_shared<MyDB_PageHandleBase>(it->second, this);
             void* availableBuffer = getAvailableBuffer();
             new_handle->mPage->setPageAddr(availableBuffer);
         }
@@ -177,7 +177,7 @@ MyDB_BufferManager :: MyDB_BufferManager (size_t pageSize, size_t numPages, stri
 }
 
 
-void MyDB_BufferManager::releaseMemory(MyDB_Page *releasePage, MyDB_PageHandle currHandle) {
+void MyDB_BufferManager::releaseMemory(MyDB_Page *releasePage) {
     // find releasePage
     auto tmpPair = make_pair(releasePage->getWhichTable()->getName(), releasePage->getOffset());
     auto it = currentPages.find(tmpPair);
@@ -197,8 +197,7 @@ void MyDB_BufferManager::releaseMemory(MyDB_Page *releasePage, MyDB_PageHandle c
         //MyDB_PageHandle tmp = make_shared <MyDB_PageHandleBase> (releasePage);
         if (releasePage->getPageAddr() && curr && curr->getIsPinned()) {
             // unpin it
-            unpin(currHandle);
-            //releasePage->setIsPinned(false);
+            releasePage->setIsPinned(false);
             updateLRU(releasePage);
             return;
         }
@@ -241,7 +240,17 @@ void MyDB_BufferManager::releaseMemory(MyDB_Page *releasePage, MyDB_PageHandle c
 }
 
 MyDB_BufferManager :: ~MyDB_BufferManager () {
-
+    MyDB_Page* cur = head;
+    while(cur!= nullptr){
+        free(cur->getPageAddr());
+        MyDB_Page* temp = cur;
+        cur = cur->next;
+        delete temp;
+    }
+    while(!availBufferPool.empty()){
+        free(availBufferPool.front());
+        availBufferPool.pop();
+    }
 }
 
 #endif

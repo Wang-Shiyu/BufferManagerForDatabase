@@ -46,7 +46,7 @@ int main () {
 		MyDB_TablePtr table1 = make_shared <MyDB_Table> ("tempTable", "foobar");
 
 		// allocate a pinned page
-		cout << "allocating pinned page\n";
+		cout << "allocating pinned page1\n";
 		MyDB_PageHandle pinnedPage = myMgr.getPinnedPage (table1, 0);
 		char *bytes = (char *) pinnedPage->getBytes ();
 		writeNums (bytes, 64, 0);
@@ -56,7 +56,7 @@ int main () {
 		// create a bunch of pinned pages and remember them
 		vector <MyDB_PageHandle> myHandles;
 		for (int i = 1; i < 10; i++) {
-			cout << "allocating pinned page\n";
+			cout << "allocating pinned page2\n";
 			MyDB_PageHandle temp = myMgr.getPinnedPage (table1, i);
 			char *bytes = (char *) temp->getBytes ();
 			writeNums (bytes, 64, i);
@@ -70,7 +70,7 @@ int main () {
 
 		// now remember 8 more pages
 		for (int i = 0; i < 8; i++) {
-			cout << "allocating pinned page\n";
+			cout << "allocating pinned page3\n";
 			MyDB_PageHandle temp = myMgr.getPinnedPage (table1, i);
 			char *bytes = (char *) temp->getBytes ();
 

@@ -31,7 +31,7 @@ MyDB_PageHandleBase :: ~MyDB_PageHandleBase () {
     // counter decreased to 0
     if (mPage->getRefCnt() == 0) {
         // need a buffer manager here
-        mng.releaseMemory(mPage);
+        bufferManager->releaseMemory(mPage);
     }
 }
 
