@@ -16,12 +16,25 @@ void *MyDB_PageHandleBase :: getBytes () {
     return this->mPage->getPageAddr();
 }
 
+//// @mPage needs to be written back
 void MyDB_PageHandleBase :: wroteBytes () {
-    mPage->setIsDirty(true);
+    mPage -> setIsDirty(true);
 }
 
-MyDB_PageHandleBase :: ~MyDB_PageHandleBase () {
+//// page's reference counter increases
+MyDB_PageHandleBase::MyDB_PageHandleBase(MyDB_Page *page, MyDB_BufferManager *bufferManager) {
+    mPage -> increRefCnt();
 }
+//// page's reference counter decreases
+MyDB_PageHandleBase :: ~MyDB_PageHandleBase () {
+    mPage -> decreRefCnt();
+    // counter decreased to 0
+    if (mPage->getRefCnt() == 0) {
+        // need a buffer manager here
+        mng.releaseMemory(mPage);
+    }
+}
+
 
 #endif
 

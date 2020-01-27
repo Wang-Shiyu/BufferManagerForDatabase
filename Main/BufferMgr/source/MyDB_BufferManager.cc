@@ -176,10 +176,74 @@ MyDB_BufferManager :: MyDB_BufferManager (size_t pageSize, size_t numPages, stri
     }
 }
 
+
+void MyDB_BufferManager::releaseMemory(MyDB_Page *releasePage, MyDB_PageHandle currHandle) {
+    // find releasePage
+    auto tmpPair = make_pair(releasePage->getWhichTable()->getName(), releasePage->getOffset());
+    auto it = currentPages.find(tmpPair);
+    if (it != currentPages.end()) {
+        // found it
+        //MyDB_Page* myPage = currentPages[tmpPair];
+        //ready to release
+
+        // if it is pinned
+        auto curr = this -> rear -> prev;
+        while (curr) {
+            if (curr->getWhichTable() == releasePage->getWhichTable() && curr->getOffset() == releasePage->getOffset()) {
+                break;
+            }
+            curr = curr -> prev;
+        }
+        //MyDB_PageHandle tmp = make_shared <MyDB_PageHandleBase> (releasePage);
+        if (releasePage->getPageAddr() && curr && curr->getIsPinned()) {
+            // unpin it
+            unpin(currHandle);
+            //releasePage->setIsPinned(false);
+            updateLRU(releasePage);
+            return;
+        }
+
+        // if it is anonymous
+        if(releasePage->getIsAnonymous()) {
+            // if it is dirty
+            if (releasePage->getIsDirty()) {
+                // write back dirty page
+                int fd = open(tempFile.c_str(), O_TRUNC | O_CREAT | O_RDWR, 0666);
+                lseek(fd, releasePage->getOffset() * pageSize, SEEK_SET);
+                write(fd, releasePage->getPageAddr(), pageSize);
+                releasePage -> setIsDirty(false);
+            }
+            // remove slot
+            tempFilePos.insert(releasePage->getOffset());
+            // find it in LRU
+            curr = this -> rear -> prev;
+            while (curr) {
+                if (curr->getWhichTable() == releasePage->getWhichTable() && curr->getOffset() == releasePage->getOffset()) {
+                    break;
+                }
+                curr = curr -> prev;
+            }
+
+            // remove from LRU
+            if (curr && (curr->next || curr->prev) ) {
+                curr->next->prev = curr->prev;
+                curr->prev->next = curr->next;
+                delete curr;
+            }
+
+            // release memory
+            if (releasePage -> getPageAddr()) {
+                availBufferPool.push(releasePage->getPageAddr());
+                releasePage->setPageAddr(nullptr);
+            }
+        }
+    }
+}
+
 MyDB_BufferManager :: ~MyDB_BufferManager () {
 
 }
-	
+
 #endif
 
 
