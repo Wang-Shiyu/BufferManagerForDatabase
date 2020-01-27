@@ -30,16 +30,17 @@ public:
     bool getIsInBuffer();
     void setIsInBuffer(bool isInBuffer);
     void increRefCnt();
+    void decreRefCnt();
+    int getRefCnt();
     void setPageAddr(void*PageAddr);
 
     //get page address. If page not in memory, load it to memory.
-
-
 
     ~MyDB_Page();
 private:
     void* PageAddr;
     MyDB_TablePtr whichTable;
+    MyDB_BufferManager mng;
     long offset;
     int refCnt;
     bool isInBuffer;

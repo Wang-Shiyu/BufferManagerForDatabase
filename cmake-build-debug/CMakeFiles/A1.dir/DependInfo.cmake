@@ -4,11 +4,11 @@ set(CMAKE_DEPENDS_LANGUAGES
   )
 # The set of files for implicit dependencies of each language:
 set(CMAKE_DEPENDS_CHECK_CXX
-  "/Users/victory/Desktop/A1/Main/BufferMgr/source/MyDB_BufferManager.cc" "/Users/victory/Desktop/A1/cmake-build-debug/CMakeFiles/A1.dir/Main/BufferMgr/source/MyDB_BufferManager.cc.o"
-  "/Users/victory/Desktop/A1/Main/BufferMgr/source/MyDB_Page.cc" "/Users/victory/Desktop/A1/cmake-build-debug/CMakeFiles/A1.dir/Main/BufferMgr/source/MyDB_Page.cc.o"
-  "/Users/victory/Desktop/A1/Main/BufferMgr/source/MyDB_PageHandle.cc" "/Users/victory/Desktop/A1/cmake-build-debug/CMakeFiles/A1.dir/Main/BufferMgr/source/MyDB_PageHandle.cc.o"
-  "/Users/victory/Desktop/A1/Main/BufferTest/source/BufferQUnit.cc" "/Users/victory/Desktop/A1/cmake-build-debug/CMakeFiles/A1.dir/Main/BufferTest/source/BufferQUnit.cc.o"
-  "/Users/victory/Desktop/A1/Main/Catalog/source/MyDB_Table.cc" "/Users/victory/Desktop/A1/cmake-build-debug/CMakeFiles/A1.dir/Main/Catalog/source/MyDB_Table.cc.o"
+  "/Users/shiyuwang/CLionProjects/DB_A1_1/Main/BufferMgr/source/MyDB_BufferManager.cc" "/Users/shiyuwang/CLionProjects/DB_A1_1/cmake-build-debug/CMakeFiles/A1.dir/Main/BufferMgr/source/MyDB_BufferManager.cc.o"
+  "/Users/shiyuwang/CLionProjects/DB_A1_1/Main/BufferMgr/source/MyDB_Page.cc" "/Users/shiyuwang/CLionProjects/DB_A1_1/cmake-build-debug/CMakeFiles/A1.dir/Main/BufferMgr/source/MyDB_Page.cc.o"
+  "/Users/shiyuwang/CLionProjects/DB_A1_1/Main/BufferMgr/source/MyDB_PageHandle.cc" "/Users/shiyuwang/CLionProjects/DB_A1_1/cmake-build-debug/CMakeFiles/A1.dir/Main/BufferMgr/source/MyDB_PageHandle.cc.o"
+  "/Users/shiyuwang/CLionProjects/DB_A1_1/Main/BufferTest/source/BufferQUnit.cc" "/Users/shiyuwang/CLionProjects/DB_A1_1/cmake-build-debug/CMakeFiles/A1.dir/Main/BufferTest/source/BufferQUnit.cc.o"
+  "/Users/shiyuwang/CLionProjects/DB_A1_1/Main/Catalog/source/MyDB_Table.cc" "/Users/shiyuwang/CLionProjects/DB_A1_1/cmake-build-debug/CMakeFiles/A1.dir/Main/Catalog/source/MyDB_Table.cc.o"
   )
 set(CMAKE_CXX_COMPILER_ID "AppleClang")
 

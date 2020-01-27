@@ -45,6 +45,9 @@ public:
 	// un-pins the specified page
 	void unpin (MyDB_PageHandle unpinMe);
 
+    //// page without reference
+    void releaseMemory(MyDB_Page* releasePage, MyDB_PageHandle currHandle);
+
 	// creates an LRU buffer manager... params are as follows:
 	// 1) the size of each page is pageSize 
 	// 2) the number of pages managed by the buffer manager is numPages;
@@ -65,7 +68,7 @@ private:
     size_t numPages;
     string tempFile;
 
-
+    friend class MyDB_PageHandle;
     //All pages being referred by handlers
     unordered_map<pair<string, long>, MyDB_Page*, hashFunc> currentPages;
 
@@ -83,7 +86,10 @@ private:
     //2. if non available buffer in queue, choose a least recently used unpinned page from LRU.
     //3. write back dirty page.
     void* getAvailableBuffer();
+
+
     void updateLRU(MyDB_Page* newPage);
+
     void readFromDisk(MyDB_Page* newPage);
 
 };

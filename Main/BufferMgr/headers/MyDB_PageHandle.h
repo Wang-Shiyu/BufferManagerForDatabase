@@ -41,6 +41,7 @@ public:
 
 private:
 	// YOUR CODE HERE
+	MyDB_BufferManager mng;
 };
 
 #endif
