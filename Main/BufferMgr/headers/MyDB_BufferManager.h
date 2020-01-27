@@ -7,11 +7,12 @@
 #include "MyDB_Page.h"
 #include <unordered_map>
 #include <queue>
+#include <set>
 
 using namespace std;
 
 struct hashFunc {
-    size_t operator()(const pair<string,long> &i) const {
+    size_t operator()(const pair<string,long> &k) const {
         return hash<string>()(k.first) ^ hash<long>()(k.second);
     }
 };
@@ -64,8 +65,11 @@ private:
     size_t numPages;
     string tempFile;
 
-    ////all pages that has already been loaded to memory;
-    unordered_map<pair<string, long>, MyDB_Page*, hashFunc> loadedPages;
+
+    //All pages being referred by handlers
+    unordered_map<pair<string, long>, MyDB_Page*, hashFunc> currentPages;
+
+    set<size_t> tempFilePos;
 
     //The address of available buffer;
     queue<void *> availBufferPool;
@@ -78,8 +82,10 @@ private:
     //1. check queue first. if available, return a page
     //2. if non available buffer in queue, choose a least recently used unpinned page from LRU.
     //3. write back dirty page.
-    MyDB_Page* getAvailablePage();
+    void* getAvailableBuffer();
     void updateLRU(MyDB_Page* newPage);
+    void readFromDisk(MyDB_Page* newPage);
+
 };
 
 #endif

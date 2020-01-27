@@ -15,26 +15,34 @@ using namespace std;
 class MyDB_Page{
 
 public:
-    MyDB_Page(void* addr);
+    MyDB_Page* next;
+    MyDB_Page* prev;
+    MyDB_Page(void* addr, MyDB_TablePtr whichTable, long offset);
     bool getIsDirty();
     void setIsDirty(bool isDirty);
     bool getIsPinned();
     void setIsPinned(bool isPinned);
     bool getIsAnonymous();
+    void* getPageAddr();
+    MyDB_TablePtr getWhichTable();
+    long getOffset();
     void setIsAnonymous(bool isAnonymous);
+    bool getIsInBuffer();
+    void setIsInBuffer(bool isInBuffer);
+    void increRefCnt();
+    void setPageAddr(void*PageAddr);
 
     //get page address. If page not in memory, load it to memory.
-    void *getBytes ();
-    char* readDisk(int descriptor, int offset, int size);
-    void writeDisk(int descriptor, int offset, int size);
+
+
 
     ~MyDB_Page();
 private:
-    MyDB_Page* next;
-    MyDB_Page* prev;
     void* PageAddr;
     MyDB_TablePtr whichTable;
     long offset;
+    int refCnt;
+    bool isInBuffer;
     bool isDirty; //whether the page is dirty
     bool isPinned;//whether the page is pinned at the moment
     bool isAnonymous;//whether the page is anonymous

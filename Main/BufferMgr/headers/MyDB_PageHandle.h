@@ -35,12 +35,12 @@ public:
 	// become unpinned.  
 	~MyDB_PageHandleBase ();
 
+    MyDB_BufferManager * bufferManager;
+    MyDB_Page * mPage;
 	// FEEL FREE TO ADD ADDITIONAL PUBLIC METHODS
 
 private:
 	// YOUR CODE HERE
-    MyDB_BufferManager * bufferManager;
-    MyDB_Page * mPage;
 };
 
 #endif

@@ -6,10 +6,11 @@
 #include "MyDB_PageHandle.h"
 
 void *MyDB_PageHandleBase :: getBytes () {
-	return mPage->getBytes();
+
 }
 
 void MyDB_PageHandleBase :: wroteBytes () {
+
 }
 
 MyDB_PageHandleBase :: ~MyDB_PageHandleBase () {
