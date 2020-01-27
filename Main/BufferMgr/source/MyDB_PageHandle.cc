@@ -3,16 +3,22 @@
 #define PAGE_HANDLE_C
 
 #include <memory>
+#include <iostream>
 #include "MyDB_PageHandle.h"
 #include "MyDB_BufferManager.h"
 
 void *MyDB_PageHandleBase :: getBytes () {
+    cout<<(this->mPage)<<endl;
     if(this->mPage->getIsInBuffer()){//Already in LRU
+        cout<<"byte update lru\n";
         this->bufferManager->updateLRU(this->mPage);
     }else{
+        cout<<"start to read\n";
         this->bufferManager->readFromDisk(this->mPage);
+        cout<<"finish read\n";
         this->bufferManager->updateLRU(this->mPage);
     }
+    cout<<"finish getbyte\n";
     return this->mPage->getPageAddr();
 }
 

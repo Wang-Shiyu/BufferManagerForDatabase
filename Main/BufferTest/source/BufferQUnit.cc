@@ -50,10 +50,11 @@ int main () {
 		MyDB_PageHandle pinnedPage = myMgr.getPinnedPage (table1, 0);
         cout << "getting pinned Page\n";
 		char *bytes = (char *) pinnedPage->getBytes ();
+        cout << "getting bytes\n";
+        cout << *bytes <<endl;
 		writeNums (bytes, 64, 0);
 		pinnedPage->wroteBytes ();
 
-		
 		// create a bunch of pinned pages and remember them
 		vector <MyDB_PageHandle> myHandles;
 		for (int i = 1; i < 10; i++) {

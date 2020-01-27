@@ -24,12 +24,9 @@ void MyDB_BufferManager :: updateLRU(MyDB_PagePtr newPage){
     //insert to head;
     cout<<"insert to head\n";
     newPage->next = this->head->next;
-    cout<<"1\n";
     this->head->next = newPage;
-    cout<<"2\n";
     cout<<newPage->next<<endl;
     newPage->next->prev = newPage;
-    cout<<"3\n";
     newPage->prev = this->head;
 }
 
@@ -137,7 +134,7 @@ MyDB_PageHandle MyDB_BufferManager :: getPinnedPage (MyDB_TablePtr whichTable, l
         cout<<"fetch success\n";
         MyDB_PagePtr new_page = make_shared <MyDB_Page>(availableBuffer,whichTable,pageNum);
         cout<<"page success\n";
-        new_handle = make_shared<MyDB_PageHandleBase>(new_page,this) ;
+        new_handle = make_shared<MyDB_PageHandleBase>(new_page,this);
         currentPages[thisPage] = new_page;
         cout<<"not found but create pinned page\n";
     }else{//found in currentPages
@@ -155,7 +152,7 @@ MyDB_PageHandle MyDB_BufferManager :: getPinnedPage (MyDB_TablePtr whichTable, l
     cout<<"begin update\n";
     updateLRU(new_handle->mPage);
     cout<<"finish update\n";
-	return nullptr;
+	return new_handle;
 }
 
 MyDB_PageHandle MyDB_BufferManager :: getPinnedPage () {
@@ -163,7 +160,7 @@ MyDB_PageHandle MyDB_BufferManager :: getPinnedPage () {
     MyDB_PageHandle new_handle = getPage();
     new_handle->mPage->setPageAddr(availableBuffer);
     new_handle->mPage->setIsPinned(true);
-	return nullptr;		
+	return new_handle;
 }
 
 void MyDB_BufferManager :: unpin (MyDB_PageHandle unpinMe) {
