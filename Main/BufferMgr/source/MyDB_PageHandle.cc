@@ -24,6 +24,7 @@ void *MyDB_PageHandleBase :: getBytes () {
 
 //// @mPage needs to be written back
 void MyDB_PageHandleBase :: wroteBytes () {
+    cout<<mPage<<endl;
     mPage -> setIsDirty(true);
 }
 

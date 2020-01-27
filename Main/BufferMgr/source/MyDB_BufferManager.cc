@@ -16,16 +16,15 @@ using namespace std;
 
 void MyDB_BufferManager :: updateLRU(MyDB_PagePtr newPage){
     //remove
-    if(newPage->next!= nullptr && newPage->prev != nullptr){//in LRU
+    if(newPage->next!= nullptr && newPage->prev != nullptr && newPage->getIsInBuffer()){//in LRU
         newPage->prev->next = newPage->next;
         newPage->next->prev = newPage->prev;
         cout<<"remove\n";
     }
     //insert to head;
-    cout<<"insert to head\n";
+
     newPage->next = this->head->next;
     this->head->next = newPage;
-    cout<<newPage->next<<endl;
     newPage->next->prev = newPage;
     newPage->prev = this->head;
 }
@@ -66,11 +65,13 @@ MyDB_PageHandle MyDB_BufferManager :: getPage () {
     if(this->tempFilePos.empty()){
         this->tempFilePos.insert(filePos+1);
     }
-
+    cout<<"filepos: "<<filePos<<endl;
     MyDB_PagePtr new_page = make_shared <MyDB_Page>(nullptr,nullptr,filePos);
+    cout<<"newpage\n";
     MyDB_PageHandle new_handler = make_shared<MyDB_PageHandleBase>(new_page,this);
-
-    this->currentPages[make_pair(nullptr,filePos)] = new_handler->mPage;
+    cout<<"new_handler"<<endl;
+    this->currentPages[make_pair("",filePos)] = new_handler->mPage;
+    cout<<"insert map\n";
     new_handler->mPage->setIsInBuffer(true);
     new_handler->mPage->setIsAnonymous(true);
     return new_handler;
@@ -156,10 +157,14 @@ MyDB_PageHandle MyDB_BufferManager :: getPinnedPage (MyDB_TablePtr whichTable, l
 }
 
 MyDB_PageHandle MyDB_BufferManager :: getPinnedPage () {
+    cout<<"start getpinnedpage()"<<endl;
     void* availableBuffer = getAvailableBuffer();
+    cout<<"get available buffer"<<endl;
     MyDB_PageHandle new_handle = getPage();
+
     new_handle->mPage->setPageAddr(availableBuffer);
     new_handle->mPage->setIsPinned(true);
+
 	return new_handle;
 }
 
@@ -198,62 +203,66 @@ MyDB_BufferManager :: MyDB_BufferManager (size_t pageSize, size_t numPages, stri
 
 void MyDB_BufferManager::releaseMemory(MyDB_PagePtr releasePage) {
     // find releasePage
-    auto tmpPair = make_pair(releasePage->getWhichTable()->getName(), releasePage->getOffset());
+    cout<<"addr"<<endl;
+
+    auto tmpPair = make_pair(releasePage->getWhichTable()?releasePage->getWhichTable()->getName():"", releasePage->getOffset());
+    cout<<"bbbb"<<endl;
     auto it = currentPages.find(tmpPair);
+    cout<<"bbbb"<<endl;
     if (it != currentPages.end()) {
         // found it
         //MyDB_Page* myPage = currentPages[tmpPair];
         //ready to release
 
         // if it is pinned
-        auto curr = this -> rear -> prev;
-        while (curr) {
-            if (curr->getWhichTable() == releasePage->getWhichTable() && curr->getOffset() == releasePage->getOffset()) {
-                break;
-            }
-            curr = curr -> prev;
-        }
-        //MyDB_PageHandle tmp = make_shared <MyDB_PageHandleBase> (releasePage);
-        if (releasePage->getPageAddr() && curr && curr->getIsPinned()) {
-            // unpin it
-            releasePage->setIsPinned(false);
-            updateLRU(releasePage);
-            return;
-        }
+
+//        auto curr = this -> rear -> prev;
+//        while (curr) {
+//            if (curr->getWhichTable() == releasePage->getWhichTable() && curr->getOffset() == releasePage->getOffset()) {
+//                break;
+//            }
+//            curr = curr -> prev;
+//        }
+//        //MyDB_PageHandle tmp = make_shared <MyDB_PageHandleBase> (releasePage);
+//        if (releasePage->getPageAddr() && curr && curr->getIsPinned()) {
+//            // unpin it
+//            releasePage->setIsPinned(false);
+//            updateLRU(releasePage);
+//            return;
+//        }
 
         // if it is anonymous
+        cout<<"aaa"<<endl;
         if(releasePage->getIsAnonymous()) {
             // if it is dirty
+            cout<<"anonymous\n";
             if (releasePage->getIsDirty()) {
                 // write back dirty page
+                cout<<"write back"<<endl;
                 int fd = open(tempFile.c_str(), O_TRUNC | O_CREAT | O_RDWR, 0666);
                 lseek(fd, releasePage->getOffset() * pageSize, SEEK_SET);
                 write(fd, releasePage->getPageAddr(), pageSize);
                 releasePage -> setIsDirty(false);
+                cout<<"finish write back"<<endl;
             }
             // remove slot
             tempFilePos.insert(releasePage->getOffset());
-            // find it in LRU
-            curr = this -> rear -> prev;
-            while (curr) {
-                if (curr->getWhichTable() == releasePage->getWhichTable() && curr->getOffset() == releasePage->getOffset()) {
-                    break;
-                }
-                curr = curr -> prev;
-            }
 
             // remove from LRU
-            if (curr && (curr->next || curr->prev) ) {
-                curr->next->prev = curr->prev;
-                curr->prev->next = curr->next;
-                curr.reset();
+            if (it->second->getIsInBuffer()) {
+                it->second->next->prev = it->second->prev;
+                it->second->prev->next = it->second->next;
             }
-
             // release memory
-            if (releasePage -> getPageAddr()) {
-                availBufferPool.push(releasePage->getPageAddr());
-                releasePage->setPageAddr(nullptr);
-            }
+            availBufferPool.push(it->second->getPageAddr());
+            it->second->setPageAddr(nullptr);
+            this->currentPages.erase(it);
+            it->second.reset();
+
+        }else if(it->second->getIsPinned()){
+            it->second->setIsPinned(false);
+            updateLRU(it->second);
+            return;
         }
     }
 }
