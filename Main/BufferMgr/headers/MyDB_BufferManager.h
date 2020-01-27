@@ -54,8 +54,9 @@ public:
 	// when the buffer manager is destroyed, all of the dirty pages need to be
 	// written back to disk, any necessary data needs to be written to the catalog,
 	// and any temporary files need to be deleted
+    void updateLRU(MyDB_Page* newPage);
+    void readFromDisk(MyDB_Page* newPage);
 	~MyDB_BufferManager ();
-
 
 	// FEEL FREE TO ADD ADDITIONAL PUBLIC METHODS 
 
@@ -64,8 +65,6 @@ private:
     size_t pageSize;
     size_t numPages;
     string tempFile;
-
-
     //All pages being referred by handlers
     unordered_map<pair<string, long>, MyDB_Page*, hashFunc> currentPages;
 
@@ -83,8 +82,7 @@ private:
     //2. if non available buffer in queue, choose a least recently used unpinned page from LRU.
     //3. write back dirty page.
     void* getAvailableBuffer();
-    void updateLRU(MyDB_Page* newPage);
-    void readFromDisk(MyDB_Page* newPage);
+
 
 };
 
