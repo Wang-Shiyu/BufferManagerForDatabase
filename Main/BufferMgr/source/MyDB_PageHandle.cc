@@ -4,8 +4,16 @@
 
 #include <memory>
 #include "MyDB_PageHandle.h"
+#include "MyDB_BufferManager.h"
 
 void *MyDB_PageHandleBase :: getBytes () {
+    if(this->mPage->getIsInBuffer()){//Already in LRU
+        this->bufferManager->updateLRU(this->mPage);
+    }else{
+        this->bufferManager->readFromDisk(this->mPage);
+        this->bufferManager->updateLRU(this->mPage);
+    }
+    return this->mPage->getPageAddr();
 }
 
 //// @mPage needs to be written back

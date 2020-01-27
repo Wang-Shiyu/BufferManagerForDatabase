@@ -1,3 +1,4 @@
+
 /Applications/CLion.app/Contents/bin/cmake/mac/bin/cmake -DCMAKE_BUILD_TYPE=Debug -G "CodeBlocks - Unix Makefiles" /Users/shiyuwang/CLionProjects/DB_A1_1
 -- The C compiler identification is AppleClang 11.0.0.11000033
 -- The CXX compiler identification is AppleClang 11.0.0.11000033
@@ -13,6 +14,8 @@
 -- Detecting CXX compiler ABI info - done
 -- Detecting CXX compile features
 -- Detecting CXX compile features - done
+/Applications/CLion.app/Contents/bin/cmake/mac/bin/cmake -DCMAKE_BUILD_TYPE=Debug -G "CodeBlocks - Unix Makefiles" /Users/victory/Desktop/A1
+
 -- Configuring done
 -- Generating done
 -- Build files have been written to: /Users/shiyuwang/CLionProjects/DB_A1_1/cmake-build-debug

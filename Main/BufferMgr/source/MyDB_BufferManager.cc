@@ -26,6 +26,18 @@ void MyDB_BufferManager :: updateLRU(MyDB_Page* newPage){
     newPage->prev = this->head;
 }
 
+void MyDB_BufferManager :: readFromDisk(MyDB_Page* newPage){
+    //get available buffer and assign
+    void* availableBuffer = getAvailableBuffer();
+    newPage->setPageAddr(availableBuffer);
+    newPage->setIsInBuffer(true);
+
+    //read data from disk to buffer
+    int fd = open (newPage->getWhichTable()->getStorageLoc().c_str (),    O_CREAT | O_RDWR | O_SYNC, 0666);
+    lseek (fd, newPage -> getOffset() * pageSize, SEEK_SET);
+    write (fd, newPage -> getPageAddr(), pageSize);
+}
+
 MyDB_PageHandle MyDB_BufferManager :: getPage (MyDB_TablePtr whichTable, long pageNum) {
     //check whether the page has already been in buffer.
     auto it = this->currentPages.find(make_pair(whichTable->getName(),pageNum));
@@ -75,12 +87,12 @@ void * MyDB_BufferManager :: getAvailableBuffer () {
         if (curr->getIsDirty()) {
             // write back dirty page
             if(curr->getIsAnonymous()){
-                int fd = open (tempFile.c_str (),  O_TRUNC | O_CREAT | O_RDWR, 0666);
+                int fd = open (tempFile.c_str (),  O_SYNC | O_CREAT | O_RDWR, 0666);
                 lseek (fd, curr -> getOffset() * pageSize, SEEK_SET);
                 write (fd, curr -> getPageAddr(), pageSize);
             }
             else{
-                int fd = open (curr->getWhichTable()->getStorageLoc().c_str (),  O_TRUNC | O_CREAT | O_RDWR, 0666);
+                int fd = open (curr->getWhichTable()->getStorageLoc().c_str (),  O_SYNC | O_CREAT | O_RDWR, 0666);
                 lseek (fd, curr -> getOffset() * pageSize, SEEK_SET);
                 write (fd, curr -> getPageAddr(), pageSize);
             }
