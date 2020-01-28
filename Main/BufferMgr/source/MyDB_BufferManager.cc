@@ -22,11 +22,14 @@ void MyDB_BufferManager :: updateLRU(MyDB_PagePtr newPage){
         cout<<"remove\n";
     }
     //insert to head;
+    cout<<"insert to head"<<endl;
 
     newPage->next = this->head->next;
     this->head->next = newPage;
     newPage->next->prev = newPage;
     newPage->prev = this->head;
+
+    cout<<newPage->next<<endl;
 }
 
 void MyDB_BufferManager :: readFromDisk(MyDB_PagePtr newPage){
@@ -72,7 +75,6 @@ MyDB_PageHandle MyDB_BufferManager :: getPage () {
     cout<<"new_handler"<<endl;
     this->currentPages[make_pair("",filePos)] = new_handler->mPage;
     cout<<"insert map\n";
-    new_handler->mPage->setIsInBuffer(true);
     new_handler->mPage->setIsAnonymous(true);
     return new_handler;
 }
@@ -164,6 +166,8 @@ MyDB_PageHandle MyDB_BufferManager :: getPinnedPage () {
 
     new_handle->mPage->setPageAddr(availableBuffer);
     new_handle->mPage->setIsPinned(true);
+    new_handle->mPage->setIsInBuffer(true);
+    updateLRU(new_handle->mPage);
 
 	return new_handle;
 }
@@ -207,6 +211,7 @@ void MyDB_BufferManager::releaseMemory(MyDB_PagePtr releasePage) {
 
     auto tmpPair = make_pair(releasePage->getWhichTable()?releasePage->getWhichTable()->getName():"", releasePage->getOffset());
     cout<<"bbbb"<<endl;
+
     auto it = currentPages.find(tmpPair);
     cout<<"bbbb"<<endl;
     if (it != currentPages.end()) {
@@ -232,27 +237,27 @@ void MyDB_BufferManager::releaseMemory(MyDB_PagePtr releasePage) {
 //        }
 
         // if it is anonymous
-        cout<<"aaa"<<endl;
-        if(releasePage->getIsAnonymous()) {
+        if(it->second->getIsAnonymous()) {
             // if it is dirty
             cout<<"anonymous\n";
-            if (releasePage->getIsDirty()) {
+            if (it->second->getIsDirty()) {
                 // write back dirty page
                 cout<<"write back"<<endl;
                 int fd = open(tempFile.c_str(), O_TRUNC | O_CREAT | O_RDWR, 0666);
-                lseek(fd, releasePage->getOffset() * pageSize, SEEK_SET);
-                write(fd, releasePage->getPageAddr(), pageSize);
+                lseek(fd, it->second->getOffset() * pageSize, SEEK_SET);
+                write(fd, it->second->getPageAddr(), pageSize);
                 releasePage -> setIsDirty(false);
                 cout<<"finish write back"<<endl;
             }
             // remove slot
-            tempFilePos.insert(releasePage->getOffset());
-
+            tempFilePos.insert(it->second->getOffset());
+            cout<<"2213"<<endl;
             // remove from LRU
             if (it->second->getIsInBuffer()) {
                 it->second->next->prev = it->second->prev;
                 it->second->prev->next = it->second->next;
             }
+            cout<<"release memory"<<endl;
             // release memory
             availBufferPool.push(it->second->getPageAddr());
             it->second->setPageAddr(nullptr);

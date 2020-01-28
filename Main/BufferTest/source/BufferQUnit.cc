@@ -118,7 +118,6 @@ int main () {
 			cout << "allocating pinned page\n";
 			MyDB_PageHandle twoHandle = myMgr.getPinnedPage ();
 			writeNums (bytes, 64, i);
-
 			twoHandle->wroteBytes ();
 		}
 
