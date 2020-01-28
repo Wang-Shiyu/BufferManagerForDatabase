@@ -18,7 +18,9 @@ void *MyDB_PageHandleBase :: getBytes () {
         cout<<"finish read\n";
         this->bufferManager->updateLRU(this->mPage);
     }
-    cout<<"finish getbyte\n";
+    cout<<"finish getbyte: "<< this->mPage->getPageAddr()<<"\n";
+    char *bytes = (char *)this->mPage->getPageAddr();
+    cout<< "content:"<<string(bytes) << endl;
     return this->mPage->getPageAddr();
 }
 

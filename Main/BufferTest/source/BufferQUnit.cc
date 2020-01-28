@@ -85,7 +85,7 @@ int main () {
 		}
 
 		// now correctly write nums at the 0th position
-		cout << "allocating unpinned page\n";
+		cout << "allocating unpinned page 0th pos\n";
 		MyDB_PageHandle anotherDude = myMgr.getPage (table1, 0);
 		bytes = (char *) anotherDude->getBytes ();
 		writeSymbols (bytes, 64, 0);
@@ -141,6 +141,7 @@ int main () {
 		// look up all of the pages, and make sure they have the correct numbers
 		for (int i = 0; i < 100; i++) {
 			MyDB_PageHandle temp = myMgr.getPage (table1, i);
+
 			char answer[64];
 			if (i < 8)
 				writeSymbols (answer, 64, i);

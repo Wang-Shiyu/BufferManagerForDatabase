@@ -41,7 +41,7 @@ void MyDB_BufferManager :: readFromDisk(MyDB_PagePtr newPage){
     //read data from disk to buffer
     int fd = open (newPage->getWhichTable()->getStorageLoc().c_str (),    O_CREAT | O_RDWR | O_SYNC, 0666);
     lseek (fd, newPage -> getOffset() * pageSize, SEEK_SET);
-    write (fd, newPage -> getPageAddr(), pageSize);
+    read (fd, newPage -> getPageAddr(), pageSize);
 }
 
 MyDB_PageHandle MyDB_BufferManager :: getPage (MyDB_TablePtr whichTable, long pageNum) {
@@ -240,41 +240,51 @@ void MyDB_BufferManager::releaseMemory(MyDB_PagePtr releasePage) {
         if(it->second->getIsAnonymous()) {
             // if it is dirty
             cout<<"anonymous\n";
-            if (it->second->getIsDirty()) {
-                // write back dirty page
-                cout<<"write back"<<endl;
-                int fd = open(tempFile.c_str(), O_TRUNC | O_CREAT | O_RDWR, 0666);
-                lseek(fd, it->second->getOffset() * pageSize, SEEK_SET);
-                write(fd, it->second->getPageAddr(), pageSize);
-                releasePage -> setIsDirty(false);
-                cout<<"finish write back"<<endl;
-            }
+
             // remove slot
             tempFilePos.insert(it->second->getOffset());
-            cout<<"2213"<<endl;
+
             // remove from LRU
             if (it->second->getIsInBuffer()) {
                 it->second->next->prev = it->second->prev;
                 it->second->prev->next = it->second->next;
             }
-            cout<<"release memory"<<endl;
-            // release memory
-            availBufferPool.push(it->second->getPageAddr());
-            it->second->setPageAddr(nullptr);
-            this->currentPages.erase(it);
-            it->second.reset();
 
-        }else if(it->second->getIsPinned()){
+
+        } else if(it->second->getIsPinned()){
             it->second->setIsPinned(false);
             updateLRU(it->second);
             return;
         }
     }
+    if (it->second->getIsDirty()) {
+        // write back dirty page
+        cout<<"write back"<<endl;
+        int fd = open(tempFile.c_str(), O_TRUNC | O_CREAT | O_RDWR, 0666);
+        lseek(fd, it->second->getOffset() * pageSize, SEEK_SET);
+        write(fd, it->second->getPageAddr(), pageSize);
+        releasePage -> setIsDirty(false);
+        cout<<"finish write back"<<endl;
+    }
+    cout<<"release memory"<<endl;
+    // release memory
+    availBufferPool.push(it->second->getPageAddr());
+    it->second->setPageAddr(nullptr);
+    this->currentPages.erase(it);
+    it->second.reset();
 }
 
 MyDB_BufferManager :: ~MyDB_BufferManager () {
     MyDB_PagePtr cur = head;
     while(cur!= nullptr){
+        if (cur->getIsDirty()) {
+            cout<<"destructor write back"<<endl;
+            int fd = open(tempFile.c_str(), O_TRUNC | O_CREAT | O_RDWR, 0666);
+            lseek(fd, cur->getOffset() * pageSize, SEEK_SET);
+            write(fd, cur->getPageAddr(), pageSize);
+            cur -> setIsDirty(false);
+            cout<<"finally write back"<<endl;
+        }
         free(cur->getPageAddr());
         MyDB_PagePtr temp = cur;
         cur = cur->next;
@@ -283,6 +293,10 @@ MyDB_BufferManager :: ~MyDB_BufferManager () {
     while(!availBufferPool.empty()){
         free(availBufferPool.front());
         availBufferPool.pop();
+    }
+
+    for (auto tmp : tempFile) {
+        close(tmp);
     }
 }
 
