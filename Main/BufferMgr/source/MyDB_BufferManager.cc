@@ -250,19 +250,26 @@ void MyDB_BufferManager::releaseMemory(MyDB_PagePtr releasePage) {
                 it->second->prev->next = it->second->next;
             }
 
-
         } else if(it->second->getIsPinned()){
             it->second->setIsPinned(false);
             updateLRU(it->second);
             return;
         }
     }
+
+
     if (it->second->getIsDirty()) {
         // write back dirty page
         cout<<"write back"<<endl;
-        int fd = open(tempFile.c_str(), O_TRUNC | O_CREAT | O_RDWR, 0666);
-        lseek(fd, it->second->getOffset() * pageSize, SEEK_SET);
-        write(fd, it->second->getPageAddr(), pageSize);
+        if(it->second->getIsAnonymous()){
+            int fd = open (tempFile.c_str (),  O_SYNC | O_CREAT | O_RDWR, 0666);
+            lseek (fd, it->second -> getOffset() * pageSize, SEEK_SET);
+            write (fd, it->second -> getPageAddr(), pageSize);
+        } else{
+            int fd = open (it->second->getWhichTable()->getStorageLoc().c_str (),  O_SYNC | O_CREAT | O_RDWR, 0666);
+            lseek (fd, it->second -> getOffset() * pageSize, SEEK_SET);
+            write (fd, it->second -> getPageAddr(), pageSize);
+        }
         releasePage -> setIsDirty(false);
         cout<<"finish write back"<<endl;
     }
@@ -278,12 +285,18 @@ MyDB_BufferManager :: ~MyDB_BufferManager () {
     MyDB_PagePtr cur = head;
     while(cur!= nullptr){
         if (cur->getIsDirty()) {
-            cout<<"destructor write back"<<endl;
-            int fd = open(tempFile.c_str(), O_TRUNC | O_CREAT | O_RDWR, 0666);
-            lseek(fd, cur->getOffset() * pageSize, SEEK_SET);
-            write(fd, cur->getPageAddr(), pageSize);
+            // write back dirty page
+            if(cur->getIsAnonymous()){
+                int fd = open (tempFile.c_str (),  O_SYNC | O_CREAT | O_RDWR, 0666);
+                lseek (fd, cur -> getOffset() * pageSize, SEEK_SET);
+                write (fd, cur -> getPageAddr(), pageSize);
+            } else{
+                int fd = open (cur->getWhichTable()->getStorageLoc().c_str (),  O_SYNC | O_CREAT | O_RDWR, 0666);
+                lseek (fd, cur -> getOffset() * pageSize, SEEK_SET);
+                write (fd, cur -> getPageAddr(), pageSize);
+            }
             cur -> setIsDirty(false);
-            cout<<"finally write back"<<endl;
+            cout<<"destructor write back"<<endl;
         }
         free(cur->getPageAddr());
         MyDB_PagePtr temp = cur;
