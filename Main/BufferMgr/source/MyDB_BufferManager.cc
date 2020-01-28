@@ -307,10 +307,6 @@ MyDB_BufferManager :: ~MyDB_BufferManager () {
         free(availBufferPool.front());
         availBufferPool.pop();
     }
-
-    for (auto tmp : tempFile) {
-        close(tmp);
-    }
 }
 
 #endif
